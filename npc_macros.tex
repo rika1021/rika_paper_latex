@@ -1,0 +1,94 @@
+% some useful macros
+%
+% a single figure
+%
+% usage:
+% \fig{width}
+% {path/filename}
+% {caption}
+% {label}
+\newcommand{\fig}[4]{
+\begin{figure}[htbp]
+\centering \includegraphics[%
+  width=#1,%
+  keepaspectratio]{#2}
+ \caption{#3}
+ \label{#4}
+\end{figure}
+}
+
+% a single figure, with additional text beneath the caption.  Usually the source of the figure.
+%
+% usage:
+% \figt{width}
+% {path/filename}
+% {caption}
+% {additional text beneath the caption.  Usually the source of the figure.}
+% {label}
+\newcommand{\figt}[5]{
+\begin{figure}[htbp]
+\centering \includegraphics[%
+  width=#1,%
+  keepaspectratio]{#2}
+ \caption{#3}
+ \label{#5}
+ #4
+\end{figure}
+}
+
+% trim out the spaces around the figure
+% in units of bp (1/72 inch)
+%
+% usage:
+% \figtr{width}
+% {path/filename}
+% {left bottom right top}
+% {caption}
+% {additional text beneath the caption.  Usually the source of the figure.}
+% {label}
+\newcommand{\figtr}[6]{
+\begin{figure}[htbp]
+\centering \includegraphics[%
+  width=#1,%
+  keepaspectratio,%
+  trim=#3]{#2}
+ \caption{#4}
+ \label{#6}
+ #5
+\end{figure}
+}
+
+% multiple figures and captions in side-by-side arrangement
+%
+% usage: (must be within figure environment)
+% \mpfigc{width}% in terms of \columnwidth
+% {path/filename}
+% {caption}
+% {additional text beneath the caption.  Usually the source of the figure.}
+% {label}
+\newcommand{\mpfigc}[5]{
+\begin{minipage}[b][1\totalheight]{#1\columnwidth}
+\vspace{0pt} % to make the vertical alignment of the minipage effective
+\centering \includegraphics[width=1\columnwidth,keepaspectratio]{#2}
+\caption{#3}
+\label{#5}
+#4
+\end{minipage}
+}
+
+% multiple figures in side-by-side arrangement, but with a single caption
+%
+% usage: (must be within figure environment)
+%     the caption capability is not included in this macro
+%
+% \mpfig{width}% in terms of \columnwidth
+% {path/filename}
+% {text beneath the figure.  Usually for the numbering of the subfigure}
+\newcommand{\mpfig}[3]{
+\begin{minipage}[b][1\totalheight]{#1\columnwidth}
+\vspace{0pt} % to make the vertical alignment of the minipage effective
+\centering \includegraphics[width=1\columnwidth,keepaspectratio]{#2}
+#3
+\end{minipage}
+}
+

@@ -1,0 +1,133 @@
+%
+% this file is encoded in utf-8
+% v2.0 (Apr. 5, 2009)
+
+\documentclass[12pt, a4paper]{ntust_report}
+
+% 除非校方修改了論文格式 (margins, header, footer, 浮水印, 中文數字之章別)
+% 或者需要增加所用的 LaTeX 套件，
+% 或者要改預設中文字型、編碼
+% 否則毋須修改本檔內容
+% 論文撰寫，請修改以 my_  開頭檔名的各檔案
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+%\usepackage{algcompatible}
+\usepackage{graphicx}
+%\usepackage{graphics}
+\usepackage{subfigure} 
+\usepackage{slashbox}
+\usepackage{comment}
+\usepackage{multirow}
+%\usepackage{array}
+\usepackage[table,xcdraw]{xcolor}
+%\usepackage{tabularx}
+\usepackage{comment}
+\usepackage{caption}
+
+\makeatletter
+\renewcommand{\ALG@name}{演算法}
+\newcommand{\thickhline}{%
+    \noalign {\ifnum 0=`}\fi \hrule height 1.5pt
+    \futurelet \reserved@a \@xhline
+}
+\newcolumntype{"}{@{\hskip\tabcolsep\vrule width 1.5pt\hskip\tabcolsep}}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\makeatother
+
+
+
+
+%%% ZZZ %%%  以下為xelatex中文使用部分設定
+\usepackage{fontspec}   %加這個就可以設定字體 
+\usepackage[BoldFont,SlantFont]{xeCJK}       %讓中英文字體分開設置，並使用模擬粗體與斜體
+\usepackage{xCJKnumb}    %使章節可以中文計數 
+
+\setmainfont{Times New Roman}
+%\setmainfont{Arial}            %設定主要字型，也就是英文字型 
+\setCJKmainfont{DFKai-SB}     %設定中文字型 (windows:預設為標楷體)
+%\setCJKmainfont{標楷體}
+%\setCJKmainfont{LiHei Pro}     %設定中文字型 (OS X:預設為儷黑)
+ 
+\XeTeXlinebreaklocale "zh"                %這兩行一定要加，中文才能自動換行 
+\XeTeXlinebreakskip = 0pt plus 1pt       %這兩行一定要加，中文才能自動換行
+
+%%%%% 中文設定結束
+
+
+\input{settings/ntust_premable.tex}
+
+\begin{document}
+
+% 針對 latex + dvipdfmx 工作流程在 hyperref 套件的影響下，圖檔的辨識力退化
+% 所作的權宜措施。可能是因為 TeXLive2007 hyperref 裏的
+% 客製 graphicx / dvipdfmx 的設定檔不夠新
+%\ifx\myworkflow\mydvipdfmxflow
+%	\DeclareGraphicsExtensions{.pdf,.png,.jpg,.eps}
+%	\DeclareGraphicsRule{.pdf}{eps}{.bb}{}
+%	\DeclareGraphicsRule{.png}{eps}{.bb}{}
+%	\DeclareGraphicsRule{.jpg}{eps}{.bb}{}
+%\fi
+
+%%%%% 中文縮排設定
+\makeatletter
+\let\@afterindentfalse\@afterindenttrue
+\@afterindenttrue
+\makeatother
+\setlength{\parindent}{2em} %使中文首段縮入兩個字
+%%%%% 中文縮排設定結束
+
+
+% 載入中文名詞的定義：例如，Figure -->「圖」, Chapter -->「第 x 章」
+\input{settings/ntust_definitions.tex}
+
+% 如果不需要以中文數字一、二、三呈現章別，例如「第一章」
+% 則請把下列介於 >>> 與 <<< 之間
+% 的文字行關掉 (行首加上百分號), 會以「第 1 章」呈現
+%% 中文數字章別 >>>
+\input{settings/ntust_chnum_xelatex.tex}
+%% <<< 中文數字章別
+
+%%% 以下是載入前頁、本文、後頁
+% front matter 前頁
+% 包括封面、書名頁、中文摘要、英文摘要、誌謝、目錄、表目錄、圖目錄、符號說明
+% 在撰寫各章草稿時，可以把此部份「關掉」，以節省無謂的編譯時間。
+% 實際內容由frontpages資料夾下
+%    my_names.tex, my_cabstract.tex, my_eabstract.tex, my_ackn.tex, my_symbols.tex
+% 決定
+% ntust_frontpages.tex 此檔只提供整體架構的定義，不需更動
+% 在撰寫各章草稿時，可以把此部份「關掉」，以節省無謂的編譯時間。
+\input{frontpages/ntust_frontpages.tex} 
+
+% 載入自訂巨集定義檔
+% 這裡定義的巨集的使用說明，可以參考 example_macro_demo.pdf
+% 預設是不載入。
+% 如果想要使用，把下一行行首的百分號去掉。
+% \input{npc_macros.tex}
+
+% main body 論文主體。建議以「章」為檔案分割的依據。
+% 在下列各行，建議了
+%   intro.tex, experiment.tex, theory.tex, calculation.tex, summary.tex
+% 做為這幾個「章」的檔案名稱
+% 實際命名方式可以隨你意
+% 在撰寫各章草稿時，可以把其他章節關掉 (行首加百分號)
+%
+%\input{contents/example_body.tex}  % 所附的範例
+%\input{contents/intro.tex}
+%\input{contents/theory.tex}
+%\input{contents/experiment.tex}
+%\input{contents/result.tex}
+%\input{contents/summary.tex}
+
+% back pages 後頁
+% 包括參考文獻、附錄、自傳
+% 實際內容由backpages資料夾下
+%    my_bib.bib, my_appendix.tex, my_vita.tex
+% 決定
+% ntust_backpages.tex 此檔只提供整體架構的定義，不需更動
+% 在撰寫各章草稿時，可以把此部份「關掉」，以節省無謂的編譯時間。
+\input{backpages/ntust_backpages.tex}
+
+\end{document} 

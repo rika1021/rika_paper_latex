@@ -1,0 +1,157 @@
+%
+% this file is encoded in utf-8
+% v1.7
+\chapter{緒論}
+\label{ch:intro}
+\section{長期演進基礎架構}
+\subsection{技術簡介}
+網際網路儼然已成為人們生活與工作中不可或缺的一部分，另外，智慧型裝置普及率的提升與使用者之需求，行動通訊技術亦已發展新的技術來滿足現代社會的需求。目前廣泛使用的第四代行動通訊系統(The Fourth Generation (4G) Mobile Communication System)於2003年由國際電信聯盟(International Telecommunication Union, ITU)所制定，之後由第三代合作夥伴計畫(3rd Generation Partnership Project, 3GPP)所發行的長期演進(Long Term Evolution, LTE)技術則被泛指為第四代行動通訊系統之標準。長期演進的資料傳輸架構中，藉由使用正交分頻多工(Orthogonal Frequency-Division Multiplexing, OFDM)來做為基礎傳輸技術，其利用多個子載波(Subcarrier)以傳輸資料，進而增加資料的傳輸效率。長期演進中的基地台也稱做演進節點 B (Evolved Node B, eNodeB)，其負責提供服務範圍內的使用者裝置(User Equipment, UE)傳輸服務，分成上行(Uplink)及下行(Downlink)兩種類型；下行傳輸採用正交分頻多重存取(Orthogonal Frequency-Division Multiple Access, OFDMA)，並在傳輸資料上可以達到100 Mbps；上行傳輸與下行傳輸不同，是採用單載波分頻多重存取(Single-Carrier Frequency-Division Multiple Access, SC-FDMA)來做為傳輸技術\cite{abu2014uplink}。上行傳輸與下行傳輸採用不同技術的主要原因說明如下，相較於下行傳輸所使用的正交分頻多重存取，單載波分頻多重存取有著較低的峰均功率比(Peak-to-Average Power Ratio, PAPR)\cite{rana2010}，能有效延長使用者裝置的有限電池使用時間。因此，在長期演進中上行傳輸與下行傳輸採用相異的傳輸技術，且由於兩種傳輸技術有著不同的限制，排程器(Scheduler)的使用與設計上也必須有所不同。
+
+%最初的第一代行動通訊(The First Generation Mobile System, 1G)在西元1983年便已開始使用，像是位於北美所使用的類比式行動電話系統(Advanced Mobile Phone System, AMPS)，即直接將聲音訊號以調頻(Frequency Modulation, FM)訊號的方式來調變，然而其僅能傳送語音訊息且無法支援數據通訊服務。第二代行動通訊(The Second Generation Mobile System, 2G)則於西元1992年開始普遍使用，主要的通訊標準如全球移動通訊系統(Global System for Mobile Communications, GSM)，全球移動通訊系統捨棄原本利用類比訊號進行語音傳輸，改採用數位訊號的方式來通訊，並且除了原先傳輸的語音之外，第二代行動通訊還能將簡訊、文字等較小量的資料，透過如通用封包無線服務(General Packet Radio Service, GPRS)的封包交換技術來傳遞數據資料，於上行傳輸中可以達到14 kbps的資料傳輸速率。第三代行動通訊(The Third Generation Mobile System, 3G)則為可以支援高速傳輸的蜂巢式(Cellular)移動通訊技術，其通訊標準由國際電信聯盟(International Telecommunication Union, ITU)所定義，而後主要由歐日美等國組成的第三代合作夥伴計畫(3rd Generation Partnership Project, 3GPP)的標準化機構所發展，其主要方法是藉由利用分碼多重存取(Code Division Multiple Access, CDMA)技術來提高頻譜的利用率，使上行傳輸的速率可以達到22 Mbps的資料傳輸速率。除了可提供傳送聲音、資訊、影音等服務之外，由於第三代行動通訊採用了網際網路通訊協定的技術，使得第三代行動通訊的使用者多了可以存取網路上資料的功能。
+
+
+\subsection{網路架構}
+長期演進網路為一種演進通用地面無線接取網路(Evolved Universal Terrestrial Radio Access Network, E-UTRAN)，除了主要的地面無線接取網路外，還包含了演進數據核心(Evolved Packet Core, EPC)，如圖 \ref{fig:EUTRAN}所示。在地面無線接取網路中，基地台之間直接透過X2介面做連結，經由X2介面的相互連絡，使得基地台可以做出許多重要的決定，如干擾管理(Interference Management)、換手(Handover)等，再由基地台透過S1介面連結到演進數據核心中的服務閘道(Serving Gateway, S-GW)，除了服務閘道外，演進數據核心還包含了兩個單元，如封包數據網路閘道(Packet Data Network Gateway, P-GW)和移動性管理單元(Mobility Management Entity, MME)，各部分負責的功能如下：
+\begin{itemize}
+\item[-] 服務閘道:負責使用者裝置數據封包的路由轉傳，以及基地台內部換手時使用者裝置介面和長期演進與其他行動通訊技術間的切換。
+\item[-] 封包數據網路閘道:做為使用者裝置與外部的封包數據網路連結的出入口通道。
+\item[-] 移動性管理單元:為演進數據核心中長期演進接入網路的主要控制節點，主要負責管理使用者裝置的移動性(Mobility)、身份驗證(Identity Authentication)、授權(Authorization)、閒置使用者裝置追踪(Idle Mode UE Tracking)、安全協調(Security Negotiation)等功能。
+\end{itemize}
+
+而演進通用地面無線接取網路則做為長期演進架構中讓使用者裝置與基地台進行無線通訊的部分，相較於先前的行動通訊技術，下行傳輸的正交分頻多重存取以及上行傳輸的單載波分頻多重存取能提供較高的傳輸速率以及較低的延遲，來滿足使用者對行動網路與日遽增的需求。
+
+\vskip 20pt
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.11,keepaspectratio]{figure/EUTRAN}
+\caption{\label{fig:EUTRAN}長期演進系統架構示意圖。}
+\end{figure}
+
+\subsection{正交分頻多重存取及單載波分頻多重存取}
+正交分頻多重存取和單載波分頻多重存取兩種通訊技術都以正交分頻多工為基礎。正交分頻多工使用了正交技術的分頻多工(Frequency-Division Multiplexing, FDM)，大幅提升了在頻譜上的使用效率，同時，子載波之間彼此相互正交，相較於分頻多工，互相干擾的程度降低很多，傳輸速率亦跟著上升。正交分頻多重存取中，基地台在排程(Scheduling)時可以從多個由複數子載波組成的子通道(Sub-Channel)中選擇通道狀況較好的子通道來傳輸，還有，多個使用者裝置可以同時存取同個子通道中不同子載波。單載波分頻多重存取和正交分頻多重存取十分類似，不過單載波分頻多重存取相對於傳統的正交分頻多重存取，在處理前多了離散傅立葉變換(Discrete Fourier Transform, DFT)，因此，也被稱作線性預編碼正交分頻多重存取(Linearly Precoded OFDMA, LP-OFDMA)技術\cite{damn2011}；除此之外，單載波分頻多重存取發送的是單載波發射訊號(Single-Carrier Transmit Signal)，而正交分頻多重存取發送的則是多載波發射訊號(Multi-Carrier Transmit Signal)，且單載波分頻多重存取的多個使用者裝置不能同時存取同個子通道，一個子通道只提供一位使用者裝置傳輸資料，正交分頻多重存取與單載波分頻多重存取在頻域上的分配差異如圖 \ref{fig:OFDMAvsSCFDMA}所示。
+\vskip 20pt
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.123,keepaspectratio]{figure/OFDMAvsSCFDMA}
+\caption 
+{\label{fig:OFDMAvsSCFDMA}正交分頻多重存取與單載波分頻多重存取示意圖。}
+\end{figure}
+
+\section{長期演進排程與資源分配架構}
+長期演進中的排程為將資源分配給使用者裝置的過程，需要取得資源來傳輸資料的使用者裝置會向服務自己的基地台發出排程請求(Scheduling Request)，接收到排程請求後的基地台則會根據基地台使用的排程演算法進行資源分配\cite{abu2014uplink}。在長期演進的架構下，排程由位於基地台的排程器負責，上行傳輸排程與下行傳輸排程分別由兩個不同的組件(Entity)，在每一次傳輸時間間隔(Transmission Time Interval, TTI)或一段由多個傳輸時間間隔所組成的時間區段的末端進行排程；需要傳送資料的使用者裝置，會發送排程請求至當前服務自己的基地台，由基地台內的排程器所採用的排程演算法來分配資源。使用者裝置除了排程請求之外，同時也會發送其他資訊，例如：緩衝區狀態回報(Buffer Status Report, BSR)、功率餘量報告(Power Headroom Report, PHR)、探測參考訊號(Sounding Reference Signal, SRS)、通道品質指標(Channel Quality Indicator, CQI)等控制面資料(Control Plane Data)，經由訊令無線承載(Signaling Radio Bearer, SBR)給基地台，排程器中的排程演算法則會利用其中的資訊來決定此次排程的資源要如何分配。此節將會對排程與資源分配相關架構進行介紹。
+\subsection{分層架構}
+長期演進的網路架構中，基地台內可分成三大層，各別包含由許多元件所構成的子層，負責排程功能的排程器位於第二層中的媒體存取控制(Medium Access Control, MAC)層，第二層又包含了三個主要的子層(Sublayer)，由上往下分別為分封數據匯聚協定(Packet Data Convergence Protocol, PDCP)層、無線鏈路控制(Radio Link Control, RLC)層以及媒體存取控制層，如圖 \ref{fig:Layers}中所示，接下來將分別說明三個子層各自所負責的功能與子層之間的關係。
+
+\vskip 20pt
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.13,keepaspectratio]{figure/Layers}
+\caption{\label{fig:Layers}長期演進分層架構示意圖。}
+\end{figure}
+
+
+分封數據匯聚協定\cite{PDCP_spec}層做為第二層中接收上層傳來資料的第一個子層，除了負責使用者面資料(User Plane Data)以及控制面資料的傳輸外，還需要處理封裝資料，如標頭(Header)的壓縮(Compression)、解壓縮(Decompression)、加密(Ciphering)、解密(Deciphering)以及資料完整性保護(Integrity Protection)。長期演進為一種以網際網路通訊協定(Internet Protocol, IP)為基礎來傳送資料的無線網路技術，需要在封包上加入網際網路通訊協定標頭，但同時也造成了系統的負荷(Overhead)，無法有效率地傳送資料以提供足夠的服務品質。為提升無線資源的使用效率，標頭的壓縮與解壓縮便成為相當重要的處理課題。長期演進中的分封數據匯聚協定層採用強固標頭壓縮(Robust Header Compression, ROHC)協定技術，其技術繼承了網際網路通訊協定標頭壓縮(IP Header Compression, IPHC)，用來有效降低標頭占用空間，以避免資源浪費。
+
+無線鏈路控制\cite{RLC_spec}層為第二層中間的子層，負責處理由上方分封數據匯聚協定層傳送下來以及下方媒體存取控制層傳送上來的資料，扮演了讓上下兩層互動，進行資料收發的角色。無線鏈路控制層主要的工作為進行資料切割與組合(Segmentation and Concatenation)以及執行自動重傳請求(Automatic Repeat Request, ARQ)機制等；資料的切割與組合指的是將來自上方分封數據匯聚協定層的服務資料單元(Service Data Unit, SDU)切割，並根據媒體存取控制層組態設定組合成適當大小的協定資料單元(Protocol Data Unit, PDU)，再傳送給下方的媒體存取控制層；由下方媒體存取控制層傳送上來的協定資料單元，會依照其標頭內對封包資料欄位(Data Field)的描述，將協定資料單元切割後並重組(Assembly)成服務資料單元再向上方子層傳送。無線鏈路控制層的自動重傳請求機制則分成三種模式：回覆模式(Acknowledged Mode, AM)、無需回覆模式(Unacknowleged Mode, UM)以及通透模式(Transparent Mode, TM)，三種模式中除了通透模式會把服務資料單元視為協定資料單元而不進行額外的切割與組合外，回覆與無需回覆的這兩種模式差別在於是否支援自動重傳請求機制，在支援自動重傳請求機制的回覆模式中，會將收到的服務資料單元切割與組合，而媒體存取控制層在接收到協定資料單元之後需要回報結果，若接收失敗的話，無線鏈路控制層必須進行重新傳送，藉此減少協定資料單元遺失的問題。
+
+媒體存取控制\cite{MAC_spec}層負責的功能主要有邏輯通道與傳輸通道對映(Mapping between Logical Channels and Transprot Channels)、多工(Multiplexing)、錯誤更正(Error Correction)以及最重要的排程工作，同時也是排程器所在的子層。排程的部分可以再區分成使用者裝置端或基地台端，本節將針對基地台端的排程做介紹。媒體存取控制層中的排程器進行排程時，會透過排程器中的排程演算法以及接收到的資訊來決定各使用者裝置可以使用的資源；在分配資源的部分，上行傳輸與下行傳輸所使用的無線傳輸技術不同，讓排程器在分配資源的對象上也有所不同；下行傳輸中，排程器以服務流為分配資源的對象，並利用通道品質指標來決定優先順序與要透過哪些邏輯通道進行傳送以及可以傳送的資料量；上行傳輸時，以使用者裝置為分配資源的對象，無法對使用者裝置的個別服務流在特定邏輯通道上進行排程，同時，只能利用緩衝區狀態回報得知該使用者裝置需要的資源總數來進行排程並分配資源。此外，為了防止協定資料單元出現遺失的問題，在媒體存取控制層中使用了混合式自動回覆請求重傳(Hybrid Automatic Repeat Request, HARQ)來快速地進行錯誤更正或決定是否需要重新重送。混合式自動回覆請求重傳為一種結合前饋式錯誤更正(Feed-forward Error Correction, FEC)以及自動回覆請求重傳的技術，主要透過自動回覆請求重傳決定是否需要重傳，並利用前饋式錯誤更正減少需要重新傳送的次數。
+
+\subsection{訊框架構及資源區塊\label{frame_RB}}
+長期演進在無線承載(Radio Bearer)的訊框(Frame)架構中，分別定義了分時雙工(Time Division Duplexing, TDD)與分頻雙工(Frequency Division Duplexing, FDD)兩種不同的模式\cite{FDD_TDD_spec}。這兩種模式主要的差別在於對不同的領域(Domain)進行切割，再將切割區分出的區域分別配置給上行傳輸以及下行傳輸；如圖 \ref{fig:TDD}所示，分時雙工是在時域(Time Domain)上切割成多個時間間隔，分別給予整段頻寬(Bandwidth)來做使用，一段時間區間給上行傳輸使用頻寬，而後面另一段時間區間則給下行傳輸使用頻寬，兩者相間交替循環，在時間區間內可以利用整個頻寬進行傳輸，同時在下行傳輸與上行傳輸的兩個時間區間中有一段保護時段(Guard Period, GP)，用於傳送與接收的轉換；圖 \ref{fig:FDD}中，分頻雙工的部分則是在頻域(Frequency Domain)上區分成兩個對等的頻帶(Frequency Band)，一個頻帶用於上行傳輸，另一個頻帶則用於下行傳輸，在同一時間點同時會有上行傳輸與下行傳輸進行。分時雙工與分頻雙工則各自有適合使用的情況，如分時雙工適合使用於非對稱服務，適當調整上行傳輸與下行傳輸所使用的時間區間，以達到較佳的頻寬資源使用配置；分頻雙工因為同一時間點會同時進行上行傳輸與下行傳輸，因此，有利於對稱服務。
+
+\vskip 20pt
+\begin{figure}[H]
+\centering
+\subfigure[\label{fig:TDD}分時雙工。]{
+\includegraphics[scale=0.08]{figure/TDD}}
+\subfigure[\label{fig:FDD}分頻雙工。]{
+\includegraphics[scale=0.08]{figure/FDD}}
+\caption{\label{fig:TDD_FDD}分時雙工與分頻雙工示意圖。}
+\end{figure}
+
+長期演進的無線資源(Radio Resource)定義於時域和頻域\cite{PHY_Channel_spec}，在無線訊框(Radio Frame)結構中，每一個無線訊框在時域的長度為10 ms，一個無線訊框由十個子訊框(Subframe)所組成，其中，每一個子訊框在時域的長度皆為1 ms，一個子訊框又可再分成兩個時槽(Time Slot)，每一個時槽為0.5 ms。不論在上行傳輸或是下行傳輸中，基礎長期演進無線資源(Basic LTE Radio Resource)都定義為在時域長0.5 ms以及在頻域頻寬為180 kHz，同時基礎長期演進無線資源又稱作實體資源區塊(Physical Resource Block, PRB)\cite{abu2014uplink}；但長期演進中都是以1 ms的週期進行一次排程，定義為一次傳輸時間間隔的時間，因此每一次分配資源時都是以一組共1 ms且180 kHz大小的實體資源區塊組成資源區塊(Resource Block, RB)，以資源區塊為最小單位去分配給需要資源的對象，因此，於本碩士論文中所提及的資源區塊皆係指由一組實體資源區塊所組成的資源區塊，而實體資源區塊與一組資源區塊的關係如圖 \ref{fig:Resource_Block}所示。根據長期演進的頻寬設定，共有1.4 MHz、3 MHz、5 MHz、10 MHz、15 MHz以及20 MHz等，並依照一個資源區塊為180 kHz來切割出每種頻寬可以使用的資源區塊量；以5 MHz為例，每1 ms中則有25個資源區塊可以使用，10 MHz的頻寬可以切出50個資源區塊來使用，而20 MHz便有100個資源區塊可以進行分配。雖然資源區塊做為用來傳輸資料的最小分配單位，每個資源區塊可以傳輸的資料量卻因通道品質的關係而不盡相同。
+\vskip 20pt
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.118,keepaspectratio]{figure/Resource_Block}
+\caption{\label{fig:Resource_Block}長期演進上行傳輸資源區塊結構示意圖。}
+\end{figure}
+
+長期演進的無線訊框中之子訊框可由圖 \ref{fig:Frame_Structure}進行說明。每個實體資源區塊在時域上由7個單載波分頻多重存取符碼(Symbol)與頻域上12個子載波所組成\cite{damn2011}，這其中的每一小格皆為實體層(Physical Layer)中的最小單位資源單元(Resource Element, RE)，占用一個單載波分頻多重存取符碼以及一個子載波，所以，一個實體資源區塊會由84個資源單元組成，而一個子訊框會有兩個實體資源區塊，故總共有168個資源單元。
+\vskip 20pt
+\begin{figure}[H]
+\includegraphics[scale=0.125,keepaspectratio]{figure/Frame_Structure}
+\caption 
+{\label{fig:Frame_Structure}長期演進無線訊框結構示意圖。}
+\end{figure}
+
+\subsection{服務品質與通道品質}
+使用者透過無線網路使用不同種類的服務，有多媒體類型的服務，同時也有文字檔案類型的服務，而使用者對於這些不同的服務所能接受的延遲時間亦不盡相同，如多媒體類型中的網際網路協議語音(Voice over Internet Protocol, VoIP)便是屬於延遲敏感(Delay-Sensitive)的服務流，一旦延遲的情況較嚴重一點，使用者就可以很明顯的感受到差異，因此，為確保這種延遲敏感的服務流能有一定的服務品質(Quality of Service, QoS)，應給予其能被優先服務的優先權。
+
+為了分級出不同種類型的服務流優先權，長期演進定義服務品質等級識別(QoS Class Identifier, QCI)來區分服務流。服務品質等級識別由1至9分成9個等級，等級1為最優先的服務類型，等級9則為最低，其中又把服務種類分成保證位元速率(Guaranteed Bit Rate, GBR)和不保證位元速率(Non-Guaranteed Bit Rate, Non-GBR)兩種資源型態，並同時設定其最大延遲上限以確保維持一定的服務品質，若封包超過其最大延遲則會被丟棄\cite{piro2013}。長期演進的服務品質等級識別表如表 \ref{tab:QoS}\cite{QCI_spec}所示。
+\vskip 10pt
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+\begin{table}[H]
+\centering
+\caption{長期演進服務品質等級識別表。}
+\vskip 5pt
+\label{tab:QoS}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{|c|c|c|c|l|}
+\hline
+\rowcolor[HTML]{32CB00} 
+QCI Index & Resource Type             & Priority & \begin{tabular}[c]{@{}c@{}}Packet Delay \\ Budget\end{tabular} & \begin{tabular}[1]{c}\qquad Examples of  Service\end{tabular} \\ \thickhline
+1         &                           & 2        & 100 ms                   & Conversational call                                                                               \\ \cline{1-1} \cline{3-5} 
+2         &                           & 4        & 150 ms                   & Conversational video                                                                              \\ \cline{1-1} \cline{3-5} 
+3         &                           & 3        & 300 ms                   & Real-time gaming                                                                                  \\ \cline{1-1} \cline{3-5} 
+4         & \multirow{-4}{*}{GBR}     & 5        & 100 ms                   & Non-conversational video                                                                          \\ \thickhline
+5         &                           & 1        & 100 ms                   & IMS signaling                                                                                     \\ \cline{1-1} \cline{3-5} 
+6         &                           & 6        & 300 ms                   & \begin{tabular}[c]{@{}l@{}}Video (buffered streaming),\\ TCP-based (e.g., WWW, e-mail)\end{tabular}                   \\ \cline{1-1} \cline{3-5} 
+7         &                           & 7        & 100 ms                   & \begin{tabular}[c]{@{}l@{}}Video (live streaming),\\ Voice, Interactive gaming\end{tabular}       \\ \cline{1-1} \cline{3-5} 
+8         &                           & 8        &                          &                                                                                                   \\ \cline{1-1} \cline{3-3}
+9         & \multirow{-5}{*}{Non-GBR} & 9        & \multirow{-2}{*}{300 ms} & \multirow{-2}{*}{\begin{tabular}[c]{@{}l@{}}Video (buffered streaming),\\ TCP-based (e.g., WWW, e-mail)\end{tabular}} \\ \hline
+\end{tabular}}
+\end{table}
+
+在排程的過程中，除了利用服務品質等級識別指標(QCI Index)與最大延遲用來確保服務流的服務品質外，通道品質指標同時也是重要的參數之一。通道品質指標讓基地台可以知道目前使用者裝置的各個通道品質，進而決定要將哪些通道分配給該使用者裝置使用。使用者裝置在觀察通道狀況之後可以求得信號與干擾加雜訊比(Signal to Interference plus Noise Ratio, SINR)，以此對通道品質的狀況評估出通道品質指標，再隨著排程請求一起與其他控制面資料傳送給基地台，讓基地台利用通道品質指標來評估目前使用者裝置的通道狀況，使排程器可以利用這些資訊進行更有效率的排程；長期演進在通道品質指標上制定了16個級別，由0至15分別表示最差至最佳的通道品質狀況，如表 \ref{tab:CQI}\cite{PHY_spec}所示，長期演進亦同時給定了不同的通道品質指標所適用的調變編碼技術(Modulation Coding Scheme, MCS)，通道品質指標較高的通道可以使用較佳的調變編碼技術，讓其中資源區塊內的每個資源單元得以攜帶的位元數上升，達到較高的資料傳輸量\cite{mukh2015}，通道品質亦可以反應出該通道在此次傳輸時間間隔中所能傳輸的資料量多寡。
+\vskip 10pt
+\begin{table}[H]
+\centering
+\caption{長期演進通道品質指標示意表。}
+\vskip 5pt
+\label{tab:CQI}
+\begin{tabular}{|c|c|c|c|}
+\hline
+CQI Index & Modulation & Code Rate & Efficiency (bits/symbol)\\ \thickhline
+0         & \multicolumn{3}{c|}{Out of Range}                \\ \thickhline
+1         & QPSK       & 0.0762    & 0.1523                  \\ \hline
+2         & QPSK       & 0.1172    & 0.2344                  \\ \hline
+3         & QPSK       & 0.1885    & 0.3770                  \\ \hline
+4         & QPSK       & 0.3008    & 0.6016                  \\ \hline
+5         & QPSK       & 0.4385    & 0.8770                  \\ \hline
+6         & QPSK       & 0.5879    & 1.1758                  \\ \thickhline
+7         & 16QAM      & 0.3691    & 1.4766                  \\ \hline
+8         & 16QAM      & 0.4785    & 1.9141                  \\ \hline
+9         & 16QAM      & 0.6016    & 2.4063                  \\ \thickhline
+10        & 64QAM      & 0.4551    & 2.7305                  \\ \hline
+11        & 64QAM      & 0.5537    & 3.3223                  \\ \hline
+12        & 64QAM      & 0.6504    & 3.9023                  \\ \hline
+13        & 64QAM      & 0.7539    & 4.5234                  \\ \hline
+14        & 64QAM      & 0.8525    & 5.1152                  \\ \hline
+15        & 64QAM      & 0.9258    & 5.5547                  \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{調變編碼技術}
+經由第二層決定好使用者裝置分配到的資源數量後，實體層便會根據其各自不同的通道品質來使用不同的調變(Modulation)方式，將數位資料轉換成類比訊號並把資料發送出去。長期演進在下行傳輸中採用正交分頻多重存取來調變，而在上行傳輸時則使用單載波分頻多重存取作為調變技術，在媒體存取控制層中的排程器會依據排程演算法決定好各使用者裝置可以在這次的傳輸時間間隔中拿到哪些資源區塊以進行傳輸，而長期演進使用的適應性調變與編碼(Adaptive Modulation and Coding, AMC)會依照收到的通道品質指標對這些資源區塊使用不同的調變方式，常見的調變方式為正交波幅調變(Quadrature Amplitude Modulation, QAM)中的四階正交波幅調變(4-QAM)、十六階正交波幅調變(16-QAM)與六十四階正交波幅調變(64-QAM)，其中的四階正交波幅調變其實與四階相位移鍵(Quadrature Phase Shift Keying, QPSK)相同且四階相位移鍵更容易實作，故被四階相位移鍵取代。不同的調變方式有不同的碼率(Code Rate)，碼率代表在一批資料中，除了偵錯碼以外的實際資料比率；偵錯碼的比率越高，實際資料的比率則會降低，碼率亦跟著下降，但其偵錯的能力較高；反之，偵錯碼比率較低，可以傳輸較多的資料，碼率也越高，但是，資料偵錯的能力便下降，碼率越接近1時，則可傳輸的實際資料量就越多。在不同的環境下，通道品質也大不相同，若通道品質較差，資料發生錯誤的情形也較嚴重，這時便需要使用碼率較低的調變方式，提供較多的偵錯碼；若是通道品質較佳的環境，則可以使用碼率較高的調變方式，增加資料的吞吐量(Throughput)，提高傳輸的效率。長期演進中制定的十六個等級的通道品質指標，同時也定義了各等級對應的調變方式，如表 \ref{tab:CQI}所示。
+\subsection{排程演算法}
+排程演算法即為排程器進行排程時用於決定使用者裝置優先順序及分配資源的方式，於每一個傳輸時間間隔中，基地台若收到來自使用者裝置的排程請求，便會進行排程並分配資源，但無線資源並非無所限制且需要資源的使用者裝置眾多，因此，如何能在有限的資源下將資源有效並合理地分配給有需要的使用者裝置便是排程演算法設計的主要考量。
+
+基地台在收到使用者裝置傳送過來的排程請求以及其他控制面資料後，便會根據排程演算法來計算出各使用者裝置於每個資源區塊上的權值，利用需要的資訊計算出時間$t$時，使用者裝置$i$在資源區塊$j$的權值$S_{i,j}(t)$，並利用這些權值建立排程矩陣(Scheduling Matrix)，而擁有最大權值$S_{i,j}(t)$的使用者裝置$i$便有最高的優先權可以優先進行資源分配；而在資源分配的階段，上行傳輸與下行傳輸有著不同的思考方向，在下行傳輸時，分配資源的對象為資料流，在分配時資源區塊可以由通道品質較佳的開始分配，分配給同個資料流的資源區塊可以為不連續的資源區塊；而在上行傳輸時，由於使用的是單載波分頻多重存取的無線傳輸技術，分配的對象為使用者裝置，而不是針對資料流個別分配資源，且在分配資源區塊時，分配給同一個使用者裝置必須為連續的資源區塊，因為這個限制使得上行傳輸的排程演算法在設計上比下行傳輸的排程演算法需要有較複雜的設計且碰到更多困難；由於上述的特點，相較於下行傳輸排程演算法的設計主要著重在排程矩陣的權值產生，上行傳輸的排程演算法主要都偏重在如何進行連續分配資源區塊給同一個使用者裝置。
+\section{研究動機}
+排程最主要的目的是讓基地台可以在眾多的使用者裝置中，將有限的資源妥善地分配給使用者裝置，而在不同排程法的機制下，排程的結果會直接地影響系統的吞吐量、整體的公平性(Fairness)以及使用者裝置等待接受服務的延遲時間等，如何能使系統擁有高效的產能卻又能讓各個使用者裝置都接收到服務是排程法一直面對的問題。而普遍使用的長期演進上行傳輸排程演算法都是以提高系統吞吐量為主要目的，這樣的排程演算法主要都是以排程矩陣中最高權值的資源區塊開始，對該使用者裝置進行連續分配，主要差異在連續分配的方式，這樣的設計最為直觀，同時也符合最大化系統吞吐量的方針，不過這樣的設計方式卻也容易讓通道品質較差的使用者裝置一直拿不到資源，而讓該使用者裝置等待資源的資料因超過其服務流最大延遲時間而被丟棄，導致封包遺失率(Packet Loss Ratio, PLR)的上升及整體吞吐量下降外，也降低了整體的公平性；除此之外，主流的排程演算法在資源的連續分配上，容易因為分配較多的資源區塊而讓其可以使用的編碼調變技術下降，讓資源區塊可以傳輸的資料量降低而影響整體的吞吐量。
+
+本碩士論文旨在改善上述提到的封包遺失率問題，透過排程演算法讓排程器能優先選取較迫切需要得到資源的使用者裝置，讓其能較其他使用者裝置先獲得較佳的資源進行資料傳輸，並在連續分配上可以更有效地利用資源，進一步提升系統的吞吐量，且讓通道品質較差的使用者裝置也有機會可以拿到資源，提升整體的公平性。
+
+本碩士論文的其他架構如下簡述，第二章引述多個上行排程演算法機制並介紹其演算法流程與效果，第三章將詳述本碩士論文所提出的上行排程演算法與其運作機制，第四章為本碩士論文提出的排程演算法的模擬結果以及與相關排程機制之比較及討論，最後，第五章為總結與未來可能深入方向的描述。

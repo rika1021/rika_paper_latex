@@ -1,0 +1,172 @@
+%
+% this file is encoded in utf-8
+% v1.7
+\chapter{改善封包遺失率及保障使用者公平性之排程演算法}
+經過第二章對主流且經典的排程演算法敘述與討論後，我們可以從中發現，這些排程演算法皆是以提升吞吐量為目標，BestCQI\cite{su2016}、FME\cite{fmerme2008}、RME\cite{safa2012}直接利用所有使用者裝置的通道狀況做為基礎，來決定資源分配的優先順序，設法提升系統的吞吐量。但是，這樣的作法並未考量使用者裝置之間的公平性，進而影響通道品質不佳的使用者裝置無法傳輸在佇列中的資料，使得這些資料在佇列中的等待時間最後超過所限制的最大延遲時間，在佇列中被丟棄，造成整體的封包遺失率上升；除此之外，由於每個使用者裝置所分配的資源區塊必須同時使用同一種調變編碼技術，隨著同一批分配給單一使用者裝置的資源區塊數上升，可能因為其中的資源區塊通道品質的關係導致降低可以使用的調變編碼技術等級，造成分配過多的資源給同一個使用者裝置反而無法充分利用資源區塊的情形發生，同時也壓縮到其他使用者裝置可以使用的資源區塊數量。因此，本碩士論文提出一排程法以改善封包遺失率同時保障使用者裝置之間的公平性。
+
+在本碩士論文中提出的排程演算法與BestCQI、FME、RME等排程演算法不同，不以使用者裝置的通道品質為基礎，而是以使用者裝置的佇列頭端(Head of Line, HOL)封包延遲為主要核心考量；使用者裝置會計算出各服務流的延遲預算減去佇列頭端封包後的剩餘時間，將其加總並平均之後，跟著排程請求與其他控制面訊息一起傳送至基地台，排程器接收到這些資訊後，以此平均延遲預算剩餘時間定義為該使用者裝置的急迫度(Degree of Urgency)；除此之外，基地台內會使用移動平均(Moving Average)的方式，紀錄各使用者裝置過去平均配置過的資源區塊數量，並將其定義為使用者裝置的平均配置資源度(Degree of Average Allocated Resources)；排程器取得使用者裝置的急迫度以及平均配置資源度後，以這兩個權值的指數型式乘積做為優先權值，決定該次排程中資源分配時的使用者裝置優先順序，優先權值越小則表示取得資源的優先權越高。
+
+在排程器進行資源分配時，為了滿足連續資源分配的限制，BestCQI、FME、RME、RR\cite{arsh2015}、PF\cite{kush2002}、ODM\cite{kana2015}等排程演算法從所選定資源區塊開始，將同一側或兩側的資源區塊連續分配給該使用者裝置，直到其他使用者裝置在欲分配資源區塊有更高的權值，或資源區塊數量已經足夠為止。分配給同一個使用者裝置的資源區塊需要透過有效信號與干擾加雜訊比決定使用的調變編碼技術，品質不一的資源區塊可能會使有效信號與干擾加雜訊比下降而使用等級較低的調變編碼技術。為能維持調變編碼技術等級，本碩士論文在提出的排程演算法中，資源分配時加入調變編碼限制(Constraint on the MCS)，以限制資源區塊分配給同一個使用者裝置的數量；在進行連續分配時，從選定的使用者裝置中通道品質最佳的資源區塊開始，檢查左右兩側的資源區塊是否加入後會降低調變編碼技術，若不會降低，才將兩側的資源區塊分配給該使用者裝置；若會降低，則結束此次的連續分配，以維持使用較高等級的調變編碼技術。此外，為能提升資源利用率，加入門檻值控制此次排程是否使用調變編碼技術限制，讓使用者裝置使用較低等級的調變編碼技術，但是，可以取得足夠的資源。我們提出的排程法流程如圖 \ref{fig:UFS}所示。
+
+\begin{figure}[H]
+\centering
+\vskip 20pt
+\includegraphics[scale=0.15,keepaspectratio]{figure/UFS}
+\caption 
+{\label{fig:UFS}植基於急迫性之公平排程演算法流程圖。}
+\end{figure}
+
+我們基於急迫度、平均配置資源度及調變編碼技術限制提出改善封包遺失率並維持公平性的排程演算法─植基於急迫性之公平排程法(Urgency-based Fair Scheduling, UFS)，接下來我們分別針對這三個考量的因素加以說明。
+\section{急迫度}
+為了降低佇列中的資料因為使用者裝置遲遲未獲得資源而被丟棄的機率，我們在設計排程演算法時，加入使用者裝置對於資源需求的急迫度，並透過公式(\ref{Urgency})來量化每個使用者裝置的急迫度：
+\begin{equation}
+\label{Urgency}
+U_i(t)=\overline{B_i^f(t)-HOL_i^f(t)}
+\end{equation}
+利用公式(\ref{Urgency})可以計算出在時間$t$時使用者裝置$i$的急迫度$U_i(t)$，其中$B_i^f(t)$為時間$t$時使用者裝置$i$中的服務流$f$的最大延遲時間，$HOL_i^f(t)$則為服務流$f$的佇列頭端封包延遲，而服務流的最大延遲時間與其佇列頭端封包延遲兩者相減，即代表了佇列頭端封包距離最大延遲時間的剩餘時間。在\cite{prad2009}中，Pradap等人提出在緩衝區狀態回報中加入延遲時間的資訊，並用於調整最大加權延遲優先(Modified Largest Weighted Delay First, M-LWDF)排程演算法\cite{andr2001}，其利用公式(\ref{MLWDF})計算時間$t$時服務流$j$的權值$m_j(t)$：
+\begin{equation}
+\label{MLWDF}
+m_j(t)=\frac{-log\psi_j}{T_j}\cdot W_j(t)\cdot\frac{r_j(t)}{\overline{r_j}}
+\end{equation}
+其中$\psi_j$為自行給定的服務流可容忍封包遺失率，$T_j$為延遲門檻值，即為最大延遲時間；通常會將$\psi_j$設定為很小的數值，使得$-log\psi_j$為大於1的正數，讓權值$m_j(t)$上昇，而自行給定的服務流$j$的可容忍封包遺失率$\psi_j$必須滿足公式：
+\begin{equation}
+\label{delta}
+Pr\{W_j(t)>T_j\}\leq \psi_j
+\end{equation}
+在公式(\ref{MLWDF})與(\ref{delta})中的$W_j(t)$為時間$t$時服務流$j$的佇列頭端封包延遲，$r_j(t)$為時間$t$時服務流$j$可以達到的資料率，$\overline{r_j}$為服務流$j$的平均資料率。在\cite{prad2009}，同樣也將佇列頭端封包延遲時間與封包預算加入排程演算法，並將公式(\ref{MLWDF})中的$W_j(t)$利用公式(\ref{remain})代入：
+\begin{equation}
+\label{remain}
+W_j(t)=\max(0,\overline{T_i}-l_i)
+\end{equation}
+其中$\overline{T_i}$為使用者裝置$i$平均服務流延遲預算，$l_i$為使用者裝置$i$中最接近延遲門檻值的佇列頭端封包剩餘時間。但是，在使用者裝置中，通常並不會只存在一種類型的服務流需要進行傳輸，若有多種服務流的使用者裝置跟只有單一種服務流的使用者裝置同時發出服務請求，使用公式(\ref{MLWDF})計算權值時，即使單一種服務流的使用者裝置的剩餘時間較少，有多種服務流的使用者裝置會因為計算出較大的權值，而可以先取得資源。因此，我們不只考量最接近延遲門檻值的佇列頭端封包剩餘時間，而是將使用者裝置中所有種類服務流各自的剩餘時間都加入計算；我們將使用者裝置$i$中的每一個服務流各自的延遲預算時間$B_i^f(t)$以及其佇列頭端封包延遲$HOL_i^f(t)$相減，得出延遲預算剩餘時間後再加總並平均，我們定義此數值為急迫度$U_i(t)$，做為量化使用者裝置對於資源需求的急迫程度之依據。當$U_i(t)$越小時，則表示使用者裝置$i$中的服務流已經逼近佇列中頭端封包被丟棄的時間限制，需要盡快取得資源將佇列中的資料傳送出去；而當$U_i(t)$越大時，則使用者裝置$i$服務流的佇列距離封包被丟棄的時間較長，對於資源需求的急迫程度較低。
+
+\section{平均配置資源度}
+在3.1節中，我們為了改善封包遺失率而在排程演算法中加入急迫度，但是，在排程時優先分配資源給對資源有急迫需求的使用者裝置，讓這些使用者裝置可以有較佳通道品質的資源區塊，則其他的使用者裝置則只能使用通道品質較差的資源區塊，又受到調變編碼技術限制的影響，只能拿到少量的資源，造成整體的公平性下降。因此，我們希望排程演算法可以顧慮到使用者裝置之間的公平性，針對這點，我們將使用者裝置平均配置到的資源區塊數量加入排程演算法的設計當中，與急迫度一同決定使用者裝置的優先順序，維持使用者裝置間整體的公平性。計算使用者裝置平均配置資源度的方式如下：
+\begin{equation}
+\label{Allocation}
+\overline{A_i(t)}=(1-\gamma)*\overline{A_i(t')}+\gamma*A_i(t'),\quad A_i(0)=1
+\end{equation}
+在公式(\ref{Allocation})中，$\overline{A_i(t')}$定義為在時間$t'$時，由公式(\ref{Allocation})計算出使用者裝置$i$在時間$0\sim t'$的平均配置資源度，$A_i(t')$則代表了在時間$t'$時配置給使用者裝置$i$的資源區塊數量，而$t'$表示上一次使用者裝置進行排程的時間點。如果此次排程時，使用者裝置$i$並未配置任何資源區塊，則基地台仍會利用公式(\ref{Allocation})更新使用者裝置$i$平均配置資源度，讓使用者裝置$i$在下次排程時可以更有機會優先取得資源。計算平均配置資源量$\overline{A_i(t)}$時，我們使用移動平均的計算方式，沿用比例性公平演算法\cite{lee2009}中的計算權值概念；在比例性公平排程演算法中，在時間$t$時使用者裝置$i$在資源區塊$c$的權值$\lambda_i^c(t)$計算可以利用公式(\ref{PF_metric})計算得出，
+\begin{equation}
+\label{PF}
+\lambda_i^c(t)=\dfrac{r_i^c(t)}{\overline{R_i(t)}}
+\end{equation}
+其中$r_i^c(t)$為在時間$t$時使用者裝置$i$在資源區塊$c$可以達到的資料傳輸率，$\overline{R_i(t)}$表示在時間$t$時使用者裝置$i$的平均資料傳輸率，而平均資料傳輸率則利用公式(\ref{Moving_average})\cite{kim2012}的移動平均方式計算：
+\begin{equation}
+\label{Moving_average}
+\overline{R_i(t)}=(1-\omega)*\overline{R_i(t')}+\omega*r_i(t),\quad r_i(0)=0
+\end{equation}
+假定這次兩個使用者裝置$A,B$都拿到通道品質相同而可以有相同的資料傳輸率時，持續拿到品質較好通道的使用者裝置$A$有較高的平均資料傳輸率，其權值會相較持續拿到品質較差而有較低平均資料傳輸率的使用者裝置$B$小，因而讓使用者裝置$B$能拿到資源進行資料的傳輸，用以提升使用者裝置之間的公平性。
+
+\section{調變編碼技術限制}
+除了上述兩節所提到的兩項用於決定資源分配時，使用者裝置間的優先順序所使用的權值外，在上行傳輸排程架構中，相當關鍵的部分為資源區塊分配的方式。下行傳輸排程架構中可以自由分配未配置的資源區塊，上行傳輸在資源區塊的分配上受限於所使用的單載波分頻多重存取，必須以連續分配的方式來配置資源區塊給使用者裝置，因此，相對下行傳輸排程演算法，上行傳輸排程演算法在資源分配上會需要額外的考量與設計。一般上行傳輸排程演算法為提升系統吞吐量，在連續配置資源區塊時，如果有其他的使用者裝置$j$在欲配置的資源區塊$r$擁有比目前欲分配的使用者裝置$i$更好的通道品質，則會結束這次使用者裝置$i$的連續分配。各個不同的排程演算法在中斷連續分配後有不同的作法，但大致都是以這個情況做為中斷連續分配的條件。但是，此種分配方式可能會一次分配太多的資源，其中資源區塊的通道品質影響有效信號與干擾加雜訊比，而必須對整段連續資源區塊使用較低等級的調變編碼技術；如\cite{kess2012}中提到，上行傳輸在選擇分配的資源區塊時，資源區塊受限於使用單載波分頻多重存取，必須為連續的資源區塊，同時，分配給同一個使用者裝置的資源區塊必須使用同一種調變編碼技術，這樣的限制使得在連續分配時，選擇的資源區塊極有可能因為通道品質不盡相似的關係，必須使用較低等級的調變編碼技術；而下行傳輸則不需要受到連續分配限制，在選擇分配的資源區塊時，可以選擇通道品質較佳的不連續資源區塊，而不容易分配到通道品質較差的資源區塊而需要使用等級較低的調變編碼技術。為避免因分配過多的連續資源區塊給同一個使用者裝置而造成使用等級較低的編碼調變技術的情況發生，我們在排程演算法中的資源區塊分配階段，加上對於調變編碼技術的限制；在連續分配時，若將資源區塊$r$分配給使用者裝置$i$，會因為其通道品質導致使用者裝置$i$必須使用較低等級的調變編碼技術時，則排程演算法就不會將資源區塊$r$分配給使用者裝置$i$，讓使用者裝置得以維持使用等級較高的調變編碼技術。
+
+在需要分配資源的使用者裝置不多的情況下，我們所提出的調變編碼技術限制，因為限制每個使用者裝置取得資源區塊的數量，可能讓使用者裝置不能取得足夠的資源來完全傳送佇列中的資料，亦導致資源區塊使用率不佳而浪費資源，為此，除了調變編碼技術的限制外，我們同時提出分配量(Allocation Amount) $\mathcal{A}(t)$以及分配量門檻值(Threshold of Allocation Amount) $\mathcal{A}_T$做為啟動限制機制的板機，分配量利用公式(\ref{Threshold})計算而得。
+\begin{equation}
+\label{Threshold}
+\mathcal{A}(t)=N_{RB}/S(t)
+\end{equation}
+公式(\ref{Threshold})中的$\mathcal{A}(t)$為在時間$t$時的分配量，亦即，時間$t$時一個使用者裝置平均可以拿到的資源區塊數量，$S(t)$代表時間$t$時請求資源的使用者裝置數量；在資源區塊總數固定的情況下，若$\mathcal{A}(t)$越高代表請求資源的使用者裝置較少，使用者裝置可以取得較多的資源來傳輸資料；反之，$\mathcal{A}(t)$越低則表示請求資源的使用者裝置較多，資源競爭較激烈。$\mathcal{A}(t)$大於等於分配量門檻值$\mathcal{A}_T$，則表示資源充足，因此，排程器便不會啟動調變編碼技術限制，讓使用者裝置可以拿到足夠的資源，並提高資源的使用率，及增加吞吐量；相反地，$\mathcal{A}(t)$小於$\mathcal{A}_T$，顯示有許多使用者裝置在競爭資源，則排程器便會啟動調變編碼技術限制，降低使用者裝置取得資源區塊的數量並提升拿到資源後的效率，讓資源能分配給更多的使用者裝置，以維持公平性。
+\clearpage
+\section{排程演算法流程}
+在前三節中，我們分別針對提出的排程演算法中所使用的決策權值做說明。上行傳輸中，排程演算法可概分出兩個階段，第一個階段為選擇出排程矩陣中通道品質最高的資源區塊，第二個階段為以此資源區塊開始進行連續分配給該使用者裝置。接下來我們將利用演算法 \ref{alg:UFS}對所提出之排程演算法的兩個階段做進一步的介紹來了解其運作方式以及與其他排程演算法的不同之處。
+\subsection{使用者裝置優先順序階段}
+在每一個傳輸時間間隔中，位於基地台的排程器在接收到由使用者裝置傳送到基地台的服務品質需求以及通道品質資訊之後，其所採用的排程演算法便會利用這些資訊來產生排程矩陣$\textbf{\textit{M}}$，此矩陣大小為$m(t)\times n(t)$，表示在時間$t$時，有$m(t)$個使用者裝置發送排程請求，且有$n(t)$個資源區塊可以使用，矩陣中的元素值$\textbf{\textit{M}}(i,j)$皆由時間$t$時使用者裝置$i$在資源區塊$j$的通道品質$\phi_{i,j}(t)$所構成，即$\textbf{\textit{M}}(i,j)=\phi_{i,j}(t)$，其中$0\leq i<m(t) , 0\leq j<n(t)$，通道品質$\phi_{i,j}(t)$為使用者裝置傳送至基地台的控制面資料中的通道品質指標，其中$0\leq \phi_{i,j}(t)\leq 15$。我們提出的排程演算法與其他比較的排程演算法差異的地方描述如下。在BestCQI、FME、RME、ODM中，以提升系統吞吐量為目標，第一階段時以選擇排程矩陣$\textbf{\textit{M}}$中通道品質最佳的資源區塊，以其所擁有的使用者裝置為優先分配的對象；但是，這樣的選擇方式會使通道品質較差的使用者裝置只能取得較少資源甚至無法取得資源，導致封包在佇列中被丟棄以及整體公平性下降。RR與UFS在第一階段的選擇依據都是使用者裝置而非資源區塊，PF與RR以維持整體的公平性為主要目的，RR根據各使用者裝置距離上次被分配到資源的時間，選擇距離最長的使用者裝置開始做為優先分配資源的對象，以維持整體的公平性；UFS則是以急迫度為決定使用者裝置優先順序的依據，讓佇列頭端封包逼近延遲預算時間的使用者裝置可以優先分配到資源並傳輸資料，來降低封包在佇列中被丟棄的機率。
+
+在UFS中，每個使用者裝置於時間$t$發送排程請求時，使用公式(\ref{Urgency})來計算出各自的平均服務流延遲預算剩餘時間，跟著緩衝區狀態回報等控制面訊息跟著排程請求一起傳送給基地台之後，排程器會依據每個使用者裝置的平均延遲預算剩餘時間，來量化每個使用者裝置的急迫度$U_i(t)$。但是，如果只考量到使用者裝置的急迫度做為分配資源時的優先順序，剩餘延遲預算時間較長的使用者裝置會較晚進行資源分配，如有多種類服務流的使用者裝置，其平均延遲預算剩餘時間便容易比只有單一種類服務流的使用者裝置更長，除了在資源區塊的通道品質選擇上較少之外，受到調變編碼技術限制的影響，分配到的資源區塊數量也受到限制，因而持續分配到較少的資源，影響整體使用者裝置之間的公平性。因此，UFS將使用者裝置平均配置過的資源區塊數量加入優先順序的決策。排程器在取得使用者裝置$i$的急迫度後，利用公式(\ref{Allocation})計算出使用者裝置$i$平均配置過的資源區塊數量，一直因為平均延遲預算剩餘時間分配到較少資源的使用者裝置，可以透過平均配置資源度$\overline{A_i(t)}$提升自身的優先權，而不需一直等待到延遲預算剩餘時間逼近零時才能優先取得資源。排程器利用公式(\ref{Priority})得出使用者裝置的優先順序權值$P_i(t)$，並以此權值做為分配資源優先順序的依據。
+\begin{equation}
+\label{Priority}
+P_i(t)=\big(U_i(t)\big)^\mu*\big(\overline{A_i(t)}\big)^\nu
+\end{equation}
+其中擁有最小優先權值$P_i(t)$的使用者裝置$i$為最優先進行分配資源的對象，$\mu$與$\nu$為分別用於調節急迫度$U_i(t)$與平均配置資源度$\overline{A_i(t)}$的指數，可以決定各自在決定使用者裝置優先權時的影響力，使得UFS能在使用者上更有彈性，視狀況調整$\mu$與$\nu$來滿足需求，急迫度$U_i(t)$、平均配置資源度$\overline{A_i(t)}$、$\mu$與$\nu$的各自的範圍如下：
+\begin{equation}
+\label{UFS_factor_range}
+\left . 
+\begin{array}{l} 
+
+0 < U_i(t) < \overline{B_i^f(t)}
+ \\ 
+0 \leq \overline{A_i(t)} \leq N_{RB}
+
+\end{array}\right .
+\end{equation}
+\begin{equation}
+\label{UFS_exponent}
+\left . 
+\begin{array}{l} 
+0\leq\mu\leq \mu_{MAX}
+ \\ 
+0\leq\nu\leq 1
+\end{array}\right .
+\end{equation}
+急迫度$U_i(t)$的計算單位為秒，且為介於0至使用者裝置內服務流的平均延遲預算$\overline{B_i^f(t)}$之間的浮點數，根據表 \ref{tab:QoS}，長期演進定義不同服務品質等級中的延遲預算，最多為300 ms，因此，使用者裝置內服務流的平均延遲預算範圍為$0 \leq \overline{B_i^f(t)} \leq 0.3\enskip\text{s}$，同時，可以利用指數$\mu$來決定是增加或是降低急迫度的影響；當$0\leq\mu< 1$時，$\big(U_i(t)\big)^\mu$的數值會上升，與$\mu=1$時相比，急迫度對優先權值$P_i(t)$的影響下降；當$1<\mu\leq \mu_{MAX}$時，$\big(U_i(t)\big)^\mu$的數值會下降，增加急迫度對優先權值$P_i(t)$的影響，$\mu$的數值理論上可以選用任何大於1的數值，但是，如果$\mu$的數值太高會讓$\big(U_i(t)\big)^\mu$數值變得過小，因此，建議設定$\mu_{MAX}=2$，讓$\mu$的範圍控制在$0\leq\mu\leq 2$之間。平均配置資源度$\overline{A_i(t)}$的範圍主要在$0\leq\overline{A_i(t)}\leq N_{RB}$中，而$0\leq\overline{A_i(t)}<1$的機率相當低，可以將$\nu$的範圍控制在$0\leq\nu\leq 1$來調整平均配置資源度的影響力，同時，平均配置資源度本身主要用來微調優先權值，對使用者裝置優先權值的影響不比急迫度強烈，因此，不應設定$\nu > 1$。排程器計算完所有需要分配資源的使用者裝置各自的優先權值後，之後便進入第二階段，從擁有最小優先權值的使用者裝置開始，利用排程矩陣$\textbf{\textit{M}}$上的資訊進行資源區塊連續分配。
+
+\subsection{資源區塊連續分配階段}
+在BestCQI、FME、RME、ODM排程演算法中，進行連續分配時，會從在排程矩陣中$\textbf{\textit{M}}$尋找最高元素值的$\textbf{\textit{M}}(s,r)$，將資源區塊$r$分配給使用者裝置$s$，並從資源區塊$r$開始，依照排程演算法的設計在排程矩陣上向連續的下一個資源區塊$r+1$或是上一個資源區塊$r-1$進行連續分配，當同一個使用者裝置$s$在$\textbf{\textit{M}}(s,r+1)$的元素值都大於$\textbf{\textit{M}}$中第$r+1$行上的其他元素時，表示使用者裝置$s$在資源區塊$r+1$上的通道品質皆優於其他使用者裝置，則排程器會將此資源區塊$r+1$分配給使用者裝置$s$，並繼續檢查使用者裝置$s$在資源區塊$r+2$的元素值$\textbf{\textit{M}}(s,r+2)$是否依然高於其他使用者裝置；倘若有其他使用者裝置$v$在資源區塊$r+1$的元素值大於當前分配資源的使用者裝置$s$，即$\textbf{\textit{M}}(s,r+1)<\textbf{\textit{M}}(v,r+1)$，則排程器會將資源區塊$r+1$分配給擁有更高元素值的使用者裝置$v$，並從$\textbf{\textit{M}}(v,r+1)$開始對使用者裝置$v$進行連續分配。RR排程演算法在選擇最久未被分配資源的使用者裝置之後，從編號最小的資源區塊開始，分配透過公式(\ref{RR})所得出的資源區塊量給該使用者裝置。我們提出的排程演算法UFS，在連續分配資源的階段與BestCQI、RR、FME、RME、ODM採用不同的分配方式與限制。
+
+排程器在第一階段計算出所有使用者裝置的優先順序並建立優先順序表$P$後，如演算法 \ref{alg:UFS}中第 \ref{line:op1} 行所示，由小至大依序對優先順序表$P$中的使用者裝置進行連續分配，直到$P$內容為空時停止。如演算法 \ref{alg:UFS}中第 \ref{line:op2} 行所示，從$P$中選出擁有最小優先權值$P_i(t)$的使用者裝置$i$為優先分配對象，並依照演算法 \ref{alg:UFS}中第 \ref{line:op3} 行，在排程矩陣$\textbf{\textit{M}}$第$i$列中選擇出在$\textbf{\textit{M}}(i,j)$有最高元素值$\phi_{i,j}(t)$的資源區塊$j$，以此資源區塊$j$為中心，在排程矩陣$\textbf{\textit{M}}$上的第$i$列對資源區塊$j$的兩側方向進行連續分配，並由公式(\ref{Threshold})判斷此次排程是否要使用調變編碼技術限制。由公式(\ref{Threshold})得出的分配量$\mathcal{A}(t)$小於排程器設定的分配量門檻值$\mathcal{A}_T$，表示此次需要分配資源的使用者裝置較多，排程器會啟動調變編碼技術限制來約束分配資源區塊給使用者裝置$i$的數量，增加其他使用者裝置可以取得資源的機會；反之則不啟動限制，讓使用者裝置$i$可以取得足夠的資源傳輸資料。
+
+在選出使用者裝置$i$中有著最高通道品質權值$\phi_{i,j}(t)$的資源區塊$j$後，如演算法 \ref{alg:UFS}中第 \ref{line:op4}$\sim$\ref{line:op5} 行，排程器會產生一個空集合$S$用來記錄這次排程要配置給使用者裝置$i$的資源區塊，並將剛選擇的資源區塊$j$加入$S$，設定變數$l$和$r$分別指向資源區塊$j$在排程矩陣$\textbf{\textit{M}}$上兩旁的資源區塊$j-1$和$j+1$，並開始進行連續分配。進行連續分配前，會依照演算法 \ref{alg:UFS}中第 \ref{line:op6} 行去檢查資源區塊$l$或是資源區塊$r$是否尚未被配置給其他使用者裝置，同時，$S$中的資源區塊是否已經足夠使用者裝置$i$傳送資料。若滿足演算法 \ref{alg:UFS}中第 \ref{line:op6} 行，則開始對資源區塊$l$和資源區塊$r$進行調變編碼技術限制的檢查。如演算法 \ref{alg:UFS}中第 \ref{line:op7}$\sim$\ref{line:op8} 行所示，當資源區塊$r$未被配置給其他使用者裝置，同時又滿足$\mathcal{A}(t)<\mathcal{A}_T$時，排程器會利用調變編碼技術限制來決定是否要將下一個資源區塊分配給使用者裝置，若分配資源區塊$r$給使用者裝置$i$不會影響目前使用者裝置$i$可以使用的調變編碼技術等級，如原先可以使用十六階正交波幅調變，分配資源區塊$r$並不會造成編碼調變技術只能使用較低等級的四階相位移鍵時，這種狀況便滿足調變編碼技術限制，因此，會將資源區塊$r$分配給使用者裝置$i$，將資源區塊$r$加入$S$中，並將變數$r$指向排程矩陣$\textbf{\textit{M}}$上的第$r+1$個資源區塊。檢查完資源區塊$r$後，接著會依照演算法 \ref{alg:UFS}中第 \ref{line:op9}$\sim$\ref{line:op10} 行，檢查資源區塊$l$是否尚未被配置且是否需要滿足調變編碼技術限制，如果資源區塊$l$一樣也符合限制，則繼續接著檢查資源區塊$l+1$，以此類推，直到連續分配的兩側資源區塊皆不滿足限制，或是使用者裝置已經取得足夠的資源；若是資源區塊$r$和$l$皆未滿足調變編碼技術限制，如原先可以使用六十四階正交波幅調變做為調變技術，但是，分配資源區塊$r$或$l$都會使得只能使用十六階正交波幅調變，如此便不滿足調變編碼技術限制，則此次變沒有資源區塊加入$S$，此時，排程器會依照演算法 \ref{alg:UFS}中第 \ref{line:op11}$\sim$\ref{line:op12} 行，結束對於使用者裝置$i$的資源連續分配。
+
+最後，如演算法 \ref{alg:UFS}中第 \ref{line:op13}$\sim$\ref{line:op14} 行所示，將$S$中所記錄的資源區塊配置給使用者裝置$i$，並將使用者裝置設為閒置狀態(Idle Mode)，接著從記錄尚未被配置的資源區塊的集合$R$中將這些資源區塊去除，同時，從優先順序表$P$中移去代表使用者裝置$i$權值的$P_i(t)$，則此次對於使用者裝置$i$的排程與資源配置正式結束，開始對目前優先順序表中擁有最小權值的使用者裝置進行資源區塊的分配，直到資源區塊都已經被分配給使用者裝置，或是所有使用者裝置裝置都是閒置狀態，則此次對於所有使用者裝置的排程才得以完成。本碩士論文提出的排程法UFS的完整演算法如演算法 \ref{alg:UFS}所示。
+
+\begin{algorithm}[H]
+  \caption{ UFS algorithm}
+  \label{alg:UFS}
+  \begin{algorithmic}[1]  
+  	\Statex \textit{\{Initialization\}}
+  	\Statex Compute $\mathcal{A}(t)$ using Eq. (\ref{Threshold}).
+	\Statex Compute $P_i(t)$ using Eq. (\ref{Priority}) for UE $i$ sending a scheduling request in TTI $t$.
+	\Statex \textit{// $\mathcal{A}_T$ is the threshold of allocation amount.}
+    \Statex \textit{// $P$ is the sorted list of all $P_i(t)$ which represents the degree of urgency associated with UE $i$ in TTI $t$ in an increasing order.}
+    \Statex \textit{// $\textbf{\textit{M}}$ is the channel condition matrix with $\textbf{\textit{M}}(i,j)=\phi_{i,j}(t)$ representing the channel condition of UE $i$ on RB $j$ in TTI $t$.}
+    \Statex \textit{// $R$ is the set of unassigned RBs.}
+    \Require
+    	Priority list $P$, channel condition matrix $\textbf{\textit{M}}$, unassigned RBs set $R$, allocation amount $\mathcal{A}(t)$, and threshold of allocation amount $\mathcal{A}_T$ 
+    \Statex \textit{\{Main Iteration\}} 
+    \Statex \textit{// Allocate resource until out of RBs or all UEs are in the idle mode.}   
+    \While{($P\neq\emptyset$) \textbf{and} ($R\neq\emptyset$)}	\label{line:op1}
+    \State Select UE $i$ with the smallest $P_i(t)$ of priority list $P$.	\label{line:op2}
+    \State Pick an unassigned RB $j$ with the highest metric $\phi_{i,j}(t)$ in row $i$ of $\textbf{\textit{M}}$.	\label{line:op3}
+    \State Let $S$ be the set of RBs about to assign to UE $i$.	\label{line:op4}
+    \State $S = \emptyset$
+    \State $S=S\cup \lbrace j \rbrace$
+    \State $l\leftarrow j-1$
+    \State $r\leftarrow j+1$	\label{line:op5}
+	\Statex \quad\enskip \textit{// Sequentially allocate RBs from both sides of the selected RB $j$.}
+    \While{(adjacent RB $l$ or RB $r$ is not assigned) \textbf{and}	\label{line:op6}
+    \Statex \qquad\qquad (RBs in $S$ are not sufficient for UE $i$)} 
+    	\If{RB $r$ is not assigned \textbf{and}  \label{line:op7}
+    	\Statex \qquad\qquad \big[(RB $r$ will not degrade the MCS level) \textbf{or} ($\mathcal{A}(t) \geq \mathcal{A}_T$)\big]}
+    		\State $S=S\cup \lbrace r \rbrace$
+    		\State $r\leftarrow r+1$
+    	\EndIf	\label{line:op8}
+    	
+    	\algstore{UFS}
+	\end{algorithmic}
+\end{algorithm}
+
+\clearpage
+
+\begin{algorithm}[H]
+  \ContinuedFloat
+  \caption{ UFS algorithm (Cont'd)}
+  \label{alg:UFS}
+  \begin{algorithmic}[1]  
+  	\algrestore{UFS}
+    	\If{RB $l$ is not assigned \textbf{and}	\label{line:op9}
+    	\Statex \qquad\qquad \big[(RB $l$ will not degrade the MCS level) \textbf{or} ($\mathcal{A}(t) \geq \mathcal{A}_T$)\big]}
+    		\State $S=S\cup \lbrace l \rbrace$.
+    		\State $l\leftarrow l-1$.
+    	\EndIf	\label{line:op10}
+    	\If{no RB is inclued in $S$ in this turn} \label{line:op11}
+    		\State \textbf{break while}
+    	\EndIf	\label{line:op12}
+    \EndWhile
+    \State Assign RBs in $S$ to UE $i$.	\label{line:op13}
+    \State Set UE $i$ to the idle mode.
+    \State $R=R-S$
+    \State $P=P-\lbrace P_i(t) \rbrace$	\label{line:op14}
+    \EndWhile
+  \end{algorithmic}
+\end{algorithm}

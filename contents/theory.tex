@@ -1,0 +1,149 @@
+%
+% this file is encoded in utf-8
+% v1.7
+\chapter{相關文獻探討}
+長期演進的上行傳輸排程演算法在設計上與下行傳輸有不一樣的設計考量，其中最主要的差異在於進行上行傳輸時分配資源區塊的連續限制(Contiguity Constraint)，讓排程演算法的設計難度上升許多；在每一次傳輸時間間隔時，需要取得資源進行傳輸的使用者裝置會經由傳送排程請求以及探測參考訊號等控制面資料至基地台，基地台內的排程器便會根據收到的探測參考訊號計算出對應的通道品質指標，做為排程演算法中進行資源分配時的參考。目前主流的排程演算法大致上可以分成兩種方向：通道相關(Channel-Dependent, CD)排程以及比例性公平(Proportional-Fair, PF)排程\cite{safa2013ieee}，兩者的差別在組成排程矩陣的權值(Metric)。通道相關排程演算法在進行資源分配時，考慮的是探測參考訊號計算出的通道品質指標，根據使用者裝置在每個資源區塊上的通道品質來建立排程矩陣，而擁有高權值的使用者裝置則可以有較高的機會拿到較多的資源，相對來說，通道品質一直較差的使用者裝置則有可能遲遲拿不到資源；而比例性公平排程在進行資源分配時，依據的是通道狀況以及使用者裝置長期服務率的比例為元素值所構成的排程矩陣，若一個使用者裝置長期處於通道品質狀況較差的情況時，雖然不比通道品質佳的使用者裝置可以取得較多的資源，但最後仍有機會可以取得資源而獲得服務。
+
+\section{有效信號與干擾加雜訊比}
+在長期演進中，適應性調變與編碼能根據目前的通道狀況來選用滿足其錯誤率限制的調變編碼技術，但若是對分配給使用者裝置的每個有著不同的信號與干擾加雜訊比子載波，各別使用適應性調變與編碼，這會需要產生繁複的對應表以供查找，並為系統帶來龐大的控制訊號負荷\cite{francis2014ieee}，因此，對所有分配給同一個使用者裝置的子載波都使用同樣的調變編碼技術。為簡化此問題，長期演進使用了指數有效信號與干擾加雜訊比對映(Exponential Effective SINR Mapping, EESM)來將複數子載波的信號與干擾加雜訊比對映到一個有效信號與干擾加雜訊比，有效簡化其原本需要頻繁查表的步驟。而有效信號與干擾加雜訊比$SINR_{eff}$可由公式(\ref{EffectiveSINR})\cite{ben2015}的指數有效信號與干擾加雜訊比映射求得：
+\begin{equation}
+\label{EffectiveSINR}
+SINR_{eff}^{(m)}=-\gamma_m\ln\Bigg(\dfrac{1}{N}\displaystyle\sum_{i=1}^{N}\exp\bigg(-\dfrac{SINR_i}{\gamma_m}\bigg)\Bigg)
+\end{equation}
+其中$\gamma_m$為根據調變編碼技術$m$所使用的參數，$N$為分配的子載波數量，而$SINR_{eff}^{(m)}$則為使用調變編碼技術$m$而能達到跟通道向量內的$SINR_1,SINR_2,\cdots,$\\$SINR_N$相同區塊錯誤率(BLock Error Rate, BLER)的信號與干擾加雜訊比。
+\section{調變速率與傳輸區塊}
+通信領域中調變速率單位為波特(Baud)，指的是單位時間內傳輸的符碼數，1波特即表示每秒傳輸1個符碼，然而透過不同的調變技術，每一個符碼可以攜帶的位元數亦不同，因此，調變速率與資料速率的關係可以用公式(\ref{Baud})來表示，
+\begin{equation}
+\label{Baud}
+D=S\cdot log_2 M
+\end{equation}
+其中$D$代表每秒的位元數，而$S$則是每秒的符碼數，$M$為可以傳送的不同訊息數，$log_2 M$則是每個符碼可以攜帶的位元數。以用於長期演進的正交波幅調變為例，使用十六階正交波幅調變作為調變技術則每個符碼可以攜帶4位元，六十四階正交波幅調變則可使每個符碼攜帶6位元。
+
+而在長期演進中，除了定義表 \ref{tab:CQI}的通道品質與調變技術的對應表外，另外針對調變編碼技術定義了由0至31等不同的指標以及各指標對應的傳輸區塊大小(Transport Block Size, TBS)指標，如表 \ref{tab:TBS}所示。於\cite{PHY_spec}中定義了各傳輸區塊大小指標與使用的資源區塊數所對應的資料傳輸量，實體層中便依照調變編碼技術指標與所分配到的資源區塊數量來決定此次的傳輸時間間隔裡該使用者裝置實際上可以傳輸的資料量。
+
+\begin{table}[H]
+\centering
+\caption{長期演進調變編碼技術指標對應傳輸區塊大小指標表。}
+\vskip 10pt
+\label{tab:TBS}
+\begin{tabular}{|c|c|c|}
+\hline
+\begin{tabular}[c]{@{}c@{}}Modulation Coding Scheme \\ Index\end{tabular} & Modulation & \begin{tabular}[c]{@{}c@{}}Transport Block Size \\ Index\end{tabular} \\ \hline
+0$\sim$8                                                                  & QPSK       & 0$\sim$8                                                              \\ \hline
+9                                                                         & QPSK       & 9                                                                     \\ \hline
+10                                                                        & 16QAM      & 9                                                                     \\ \hline
+11$\sim$16                                                                & 16QAM      & 10$\sim$15                                                            \\ \hline
+17                                                                        & 64QAM      & 15                                                                    \\ \hline
+18$\sim$28                                                                & 64QAM      & 16$\sim$26                                                            \\ \hline
+29                                                                        & QPSK       & \multirow{3}{*}{Reserved}                                             \\ \cline{1-2}
+30                                                                        & 16QAM      &                                                                       \\ \cline{1-2}
+31                                                                        & 64QAM      &                                                                       \\ \hline
+\end{tabular}
+\end{table}
+
+\section{最佳通道品質指標排程演算法}
+最佳通道品質指標(Best CQI)排程演算法\cite{su2016}為一種通道相關的排程演算法，利用通道品質指標建立排程矩陣，並盡量將資源分配給有著較佳通道品質的使用者裝置，即將資源區塊分配給在排程矩陣中有最大元素值的使用者裝置$k$，如公式(\ref{BCQI})所示，
+\begin{equation}
+\label{BCQI}
+k=\arg\max_{i}R_i
+\end{equation}
+$R_i$為使用者裝置$i$可以達到的傳輸速率，用以最大化整體系統的吞吐量。最佳通道品質指標排程演算法在每次的傳輸時間間隔中，從排程矩陣中選擇擁有最大元素值且尚未被分配的資源區塊，若不違反連續分配限制，則分配給該元素值對應的使用者裝置，開始向單一方向的鄰近資源區塊進行連續分配，直到該使用者裝置擁有足夠的資源區塊數量為止，再從排程矩陣中尚未被分配資源區塊選擇下一個擁有最大元素值且未分配資源的使用者裝置，直到所有使用者裝置都已分配資源區塊或是所有的資源區塊都已被分配。此排程演算法在設計構想上相當直觀且較易實作，但是，這樣的資源分配方式對於通道品質較差的使用者裝置沒有辦法分配到任何資源，以致於嚴重影響整體的公平性；且在進行連續配置時，並不考量其他資源區塊的通道品質，有可能因為時常分配過多或通道品質較差的資源區塊給同一個使用者裝置，導致有效信號與干擾加雜訊比下降，而無法使用較高等級的調變編碼技術，於是能傳輸的資料量不如預期，造成資源區塊的利用效率低落。
+
+\section{循環制排程演算法}
+循環制(Round Robin, RR)排程演算法\cite{arsh2015}為一種通道品質不相關(Channel-Independent)的排程演算法，不利用通道品質指標，而是以使用者裝置距離上次分配資源的時間做為分配資源的依據。循環制排程演算法每一次傳輸時間間隔進行排程時，會先將總共可以使用的資源區塊數量除以此次排程需要分配的使用者裝置數量，得出每一個使用者裝置可以使用的資源區塊數，並以使用者裝置最少可以得到一個資源區塊為限制，如公式(\ref{RR})所示。
+\begin{equation}
+\label{RR}
+C(t)=N_{RB}/N_{UE}(t),\quad C(t)\geq 1
+\end{equation}
+公式(\ref{RR})中，$C(t)$為時間$t$時一個使用者裝置可以取得的資源區塊數量，$N_{RB}$為可使用的資源區塊總數，$N_{UE}(t)$為時間$t$時須分配的使用者裝置數量。在資源分配階段時，先利用公式(\ref{RR})決定每個使用者裝置可以取得的資源區塊數量，接著選擇距離上次取得資源最長時間的使用者裝置，從第一個資源區塊開始，照著距離上次取得資源時間的長短順序分配資源資源區塊，其目的在於分配每個使用者裝置同樣數量的資源區塊，以盡量維持整體的公平性。這樣的分配資源方式確實可以提升整體的公平性且架構簡單並易於實作，但是，對於整個系統的吞吐量有著嚴重的影響，原因在於排程演算法並不將通道品質納入分配資源的參考，容易從通道品質較差的資源區塊開始分配，同時，分配給使用者裝置的資源區塊品質容易良莠不齊，對於延遲敏感且需要良好通道來傳輸較大量資料的服務流則容易造成服務上的中斷並無法保證其所要求的服務品質。
+\clearpage
+\section{比例性公平排程演算法}
+比例性公平(Proportional Fair, PF)排程演算法\cite{kush2002}不同於通道相關排程演算法單純利用通道品質指標做為分配資源的依據，而是參考該使用者裝置通道品質與過去的長期服務率(Long Term Service Rate)的比例。比例公平性排程演算法主要的目標為最大化對數效用方程式$\sum_ilogR_i$，其中$R_i$為使用者裝置$i$的長期服務率。為了能最大化該對數效用方程式，在Kushner等人提出的\cite{kush2002}中提到，若最大化$\sum_id_i(t)/R_i(t)$則可以達到與最大化對數效用方程式$\sum_ilogR_i$相同的效果，其中$d_i(t)$為時間$t$時使用者$i$可以達到的資料傳輸率，$R_i(t)$為時間$t$時使用者$i$的長期服務率。在比例性公平排程演算法的排程矩陣中，時間$t$時使用者裝置$i$在資源區塊$j$的矩陣元素值$\mathcal{P}_i^j(t)$計算方式如下：
+\begin{equation}
+\label{PF_metric}
+\mathcal{P}_i^j(t)=\dfrac{d_i^j(t)}{R_i(t)}
+\end{equation}
+在公式(\ref{PF_metric})中，$d_i^j(t)$為在時間$t$時使用者裝置$i$在資源區塊$j$可以達到的資料傳輸率，而長期服務率$R_i(t)$則利用移動平均(Moving Average)的方式計算，計算的方式如下：
+\begin{equation}
+\label{Moving_average}
+R_i(t)=(1-\tau)*R_i(t')+\tau*r_i(t),\quad r_i(0)=0
+\end{equation}
+其中$r_i(t)$為時間$t$時使用者裝置的資料傳輸率，$\tau$為自行選定的權重係數。比例性公平排程演算法利用公式(\ref{PF_metric})建構出排程矩陣後，同樣從排程矩陣上有著最大元素值的資源區塊開始進行連續分配給該使用者裝置，這種排程演算法考量了使用者裝置的長期服務率，能讓遲遲拿不到資源的使用者裝置因為長期服務率下降，讓自己也可以有取得資源的機會，因此，提升了使用者裝置間的公平性，同時可以有不錯的吞吐量。
+\clearpage
+\section{第一最大延展與遞迴最大延展排程演算法}
+由Ruiz De Temi{\v{n}}o等人所提出的第一最大延展(First Maximum Expansion, FME)排程演算法\cite{fmerme2008}與遞迴最大延展(Recursive Maximum Expansion, RME)排程演算法\cite{safa2012}屬於通道相關排程器的一種延伸，遞迴最大延展排程法除了同樣直接使用通道品質做為權值外，也可以使用比例性公平權值組成決定資源分配時所用的矩陣。由於在單載波分頻多重存取中進行資源配置時，若有多個資源區塊需要被配置給同一個使用者裝置，這些資源區塊必須是連續的才能被配置給該使用者裝置，若多個資源區塊為不連續的，則不能配置給同一個使用者裝置做使用。第一最大延展排程演算法在排程矩陣中選出最高權值的資源區塊時，先往矩陣上一側進行連續分配，當前的資源區塊若在其他使用者裝置有更好的通道品質時，同時又不會破壞連續分配的限制，則會將資源區塊分配給有更高通道品質的使用者裝置，否則，繼續進行當前使用者裝置的資源分配。
+
+而遞迴最大延展排程演算法與第一最大延展排程演算法相似，其核心觀念是在配置資源時，從擁有最高權值的使用者裝置與資源區塊配對開始，往兩旁的資源區塊延展，若兩旁的資源區塊沒有被配置給其他使用者裝置時，則會一起配置給同一個使用者裝置，以符合單載波分頻多重存取對於資源配置的限制。遞迴最大延展主要目的也是希望可以最大化資源區塊的利用度，在配置鄰近資源區塊給使用者裝置時，會採用遞迴搜尋的方式，即使通道品質較差，依然會分配給鄰近資源區塊配置的使用者裝置做使用，以求充分地利用資源來增加整體的產能。第一最大延展與遞迴最大延展的排程演算法流程圖則分別由圖 \ref{fig:FME}與圖 \ref{fig:RME}所示。
+\begin{figure}[H]
+\centering
+\vskip 20pt
+\includegraphics[scale=0.15,keepaspectratio]{figure/FME}
+\caption 
+{\label{fig:FME}第一最大延展排程演算法流程圖。}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\vskip 20pt
+\includegraphics[scale=0.175,keepaspectratio]{figure/RME}
+\caption 
+{\label{fig:RME}遞迴最大延展排程演算法流程圖。}
+\end{figure}
+\clearpage
+\section{機會性雙重權值排程演算法}
+由Kanagasabai和Nayak所提出的機會性雙重權值(Oppurtunistic Dual Metric, ODM)排程演算法\cite{kana2015}為一種通道相關與比例性公平的混合型排程器，不同於其它排程演算法直接選用通道品質或是比例性公平權值來組成排程矩陣，機會性雙重權值排程法同時將兩種權值納入排程法的設計中，並產生兩個排程矩陣做為分配資源的依據。機會性雙重權值排程法在Wang等人提出的機會性比例性公平排程法\cite{wang2014}的基礎上進行改良，其中排程矩陣分為主要排程矩陣($\textbf{\textit{H}}_p$)與次要排程矩陣($\textbf{\textit{H}}_s$)；假設在系統中有$m$個資源區塊，若傳輸時間間隔$t$時有$n$個使用者裝置需要分配資源，主要排程矩陣與次要排程矩陣內的元素$\textbf{\textit{H}}_p(n,m)$與$\textbf{\textit{H}}_s(n,m)$可由公式(\ref{ODM_Pmetric})及公式(\ref{ODM_Smetric})分別帶入各自選定的控制參數$(\alpha_p,\beta_p)$以及$(\alpha_s,\beta_s)$計算而得，
+
+\begin{equation}
+\label{ODM_Pmetric}
+\textbf{\textit{H}}_p(n,m)=\Bigg\{\alpha_p\cdot\Bigg(\dfrac{R_n(t)}{\overline{T_n}}\Bigg)+\beta_p\cdot\Bigg(\dfrac{R_n(t)}{\max\limits_{\forall i}(R_i(t))}\Bigg)\Bigg\}
+\end{equation}
+\begin{equation}
+\label{ODM_Smetric}
+\textbf{\textit{H}}_s(n,m)=\Bigg\{\alpha_s\cdot\Bigg(\dfrac{R_n(t)}{\overline{T_n}}\Bigg)+\beta_s\cdot\Bigg(\dfrac{R_n(t)}{\max\limits_{\forall i}(R_i(t))}\Bigg)\Bigg\}
+\end{equation}
+其中$\overline{T_n}$與$R_n(t)$分別為使用者裝置$n$的平均吞吐量和時間$t$時可以達到的位元率，$(\alpha_p,\beta_p)$和$(\alpha_s,\beta_s)$為兩組控制參數，若$\alpha_p=1,\alpha_s=1$且$\beta_p=0,\beta_s=0$，則排程器會變成比例性公平排程器；若$\alpha_p=0,\alpha_s=0$且$\beta_p=1,\beta_s=1$，則排程器便成為最佳通道品質指標排程器。關於參數$(\alpha_p,\beta_p)$和$(\alpha_s,\beta_s)$的選擇，會透過不同設定下，從模擬結果所得出的吞吐量與公平性來選擇。模擬的數值從0.25至1，以0.25為間隔，模擬20次後所得出的結果來決定$(\alpha_p,\beta_p)$和$(\alpha_s,\beta_s)$的數值，主要排程矩陣使用能產生最大吞吐量結果的$(\alpha_p,\beta_p)$來計算矩陣內的元素，次要排程矩陣則使用能達到最佳公平性的$(\alpha_s,\beta_s)$來計算矩陣內的元素。在\cite{kana2015}中提到，由於上行傳輸需要考量到使用者裝置的功率消耗，而每位使用者裝置的最大功率門檻值為23 dBm\cite{UE_spec}，使用者裝置的功率限制(Power Constraint)如公式(\ref{ODM_power_constraint})所示，
+\begin{equation}
+\label{ODM_power_constraint}
+\sum\limits_{j=1}^M\Delta(n,j)P_{Tx}(n)\leq 23\enskip\textrm{dBm}
+\end{equation}
+其中$M$為總子訊框數，$\Delta(n,j)$代表子訊框$j$是否配置給使用者裝置$n$，若為是則$\Delta(n,j)=1$，反之，則$\Delta(n,j)=0$，而$P_{Tx}(n)$為使用者裝置$n$用於每個子訊框的傳輸功率。
+
+機會性雙重權值排程演算法的演算法如演算法 \ref{alg:ODM}所示，在排程演算法剛開始時會將主要排程矩陣$\textbf{\textit{H}}_p$和次要排程矩陣$\textbf{\textit{H}}_s$各別使用的$(\alpha_p,\beta_p)$、$(\alpha_s,\beta_s)$做為輸入，經由公式(\ref{ODM_Pmetric})及公式(\ref{ODM_Smetric})各自產生矩陣元素$\textbf{\textit{H}}_p(n,m)$與$\textbf{\textit{H}}_s(n,m)$並組成主要排程矩陣$\textbf{\textit{H}}_p$和次要排程矩陣$\textbf{\textit{H}}_s$。機會性雙重權值排程演算法依序對每個未分配的資源區塊進行配置，選出在該資源區塊擁有最高主要排程矩陣元素並滿足公式(\ref{ODM_power_constraint})的使用者裝置做為配置對象，再將該資源區塊所在的列從主要排程矩陣與次要排程矩陣移除並更新未分配資源區塊集合後，會檢查鄰近擁有最高的主要排程矩陣權值或是次要排程矩陣元素的資源區塊是否也由同一個使用者裝置所擁有，確認是否符合連續分配限制；若符合，則將鄰近的資源區塊分配給同一個使用者裝置，並進行下一個資源區塊的分配；若不符合，則將鄰近的資源區塊分配給其擁有最高主要排程矩陣元素的使用者裝置，再繼續進行下一個資源區塊的分配。
+\begin{algorithm}[H]
+  \caption{ ODM scheduling algorithm}
+  \label{alg:ODM}
+  \begin{algorithmic}[1]  
+    \Require
+    \Statex Coefficient ($\alpha_p,\beta_p$) which gives the maximum throughput metric  
+    \Statex	Coefficient ($\alpha_s,\beta_s$) which gives the maximum Jain's fairness metric
+    \Statex \textit{\{Initialization\}}  
+    \State $N \leftarrow$ Number of UEs
+    \State $I_{RB} \leftarrow$ Number of unallocated RBs
+    \State Compute $\textbf{\textit{H}}_p$ using Eq. (\ref{ODM_Pmetric}).
+    \State Compute $\textbf{\textit{H}}_s$ using Eq. (\ref{ODM_Smetric}).
+    \Statex \textit{\{Main Iteration\}}
+    \Statex \textit{// Compute the optimal solution for each unallocated RB.}
+    \For{\textbf{each} $RB_j\in I_{RB}$} 
+    	\State Find the maximum of $j^{th}$ column, $\textbf{\textit{H}}_p(i,j)$, and select $UE_i$.
+    	\If{$UE_i$ satisfies power constraint of Eq. (\ref{ODM_power_constraint})}
+    		\State Assign $RB_j$ to $UE_i$.
+    		\State Remove the $j^{th}$ column from $\textbf{\textit{H}}_p$, $\textbf{\textit{H}}_s$ and update $I_{RB}$.
+    	\EndIf
+    	\State Find the maximum of $i^{th}$ row, $\textbf{\textit{H}}_p(i,k)$, and select $RB_k$.
+    	\Statex \quad\enskip \textit{// Examine whether $\textbf{H}_p$ satisfies the contiguity constraint or not.}
+    	\If{$RB_k$ is adjacent to the previously allocated RB and Eq. (\ref{ODM_power_constraint}) is satisfied}
+    	\State Assign $RB_k$ to $UE_i$.
+    	\State Remove the $k^{th}$ column from $\textbf{\textit{H}}_p$, $\textbf{\textit{H}}_s$, and update $I_{RB}$.
+    	\Statex \quad\enskip\textit{// Check $\textbf{H}_s$ when an adjacent RB does not satisfy the contiguity constraint in $\textbf{H}_p$.}
+    	\ElsIf{$RB_k$ is not adjacent to the previously allocated RB}
+    		\State Find the maximum of $i^{th}$ row, $\textbf{\textit{H}}_s(i,l)$ and select $RB_l$.
+    		\Statex \qquad\enskip\enskip \textit{// Examine whether $\textbf{H}_s$  satisfies contiguity constraint or not.}	
+    		\If{$RB_l$ is adjacent to the previously allocated RB and Eq. (\ref{ODM_power_constraint}) is satisfied
+    		\Statex \qquad\quad}
+    		\State Assign $RB_l$ to $UE_i$.
+    		\State Remove the $l^{th}$ column from $\textbf{\textit{H}}_p$, $\textbf{\textit{H}}_s$ and update $I_{RB}$.
+    		\EndIf
+    	\EndIf
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
